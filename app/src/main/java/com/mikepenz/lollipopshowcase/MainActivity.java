@@ -6,6 +6,7 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.util.Pair;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -14,23 +15,24 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.CompoundButton;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
 import com.mikepenz.aboutlibraries.Libs;
+import com.mikepenz.aboutlibraries.LibsBuilder;
+import com.mikepenz.fontawesome_typeface_library.FontAwesome;
+import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.iconics.IconicsDrawable;
-import com.mikepenz.iconics.typeface.FontAwesome;
 import com.mikepenz.lollipopshowcase.adapter.ApplicationAdapter;
 import com.mikepenz.lollipopshowcase.entity.AppInfo;
 import com.mikepenz.lollipopshowcase.itemanimator.CustomItemAnimator;
 import com.mikepenz.lollipopshowcase.util.UploadHelper;
 import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.interfaces.OnCheckedChangeListener;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.SwitchDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
-import com.mikepenz.materialdrawer.model.interfaces.OnCheckedChangeListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,10 +44,10 @@ public class MainActivity extends AppCompatActivity {
 
     private List<AppInfo> applicationList = new ArrayList<AppInfo>();
 
-    private Drawer.Result drawer;
+    private Drawer drawer;
 
     private ApplicationAdapter mAdapter;
-    private ImageButton mFabButton;
+    private FloatingActionButton mFabButton;
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private ProgressBar mProgressBar;
@@ -54,13 +56,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // Set explode animation when enter and exit the activity
-        //Utils.configureWindowEnterExitTransition(getWindow());
 
         // Handle Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -69,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
         final SharedPreferences pref = getSharedPreferences("com.mikepenz.applicationreader", 0);
 
-        drawer = new Drawer(this)
+        drawer = new DrawerBuilder(this)
                 .withToolbar(toolbar)
                 .addDrawerItems(
                         new SwitchDrawerItem().withOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -80,19 +77,18 @@ public class MainActivity extends AppCompatActivity {
                                 editor.apply();
                             }
                         }).withName(R.string.drawer_switch).withChecked(pref.getBoolean("autouploadenabled", false))
-
                 ).addStickyDrawerItems(
                         new SecondaryDrawerItem()
                                 .withName(R.string.drawer_opensource)
                                 .withIdentifier(DRAWER_ITEM_OPEN_SOURCE)
                                 .withIcon(FontAwesome.Icon.faw_github)
-                                .withCheckable(false)
+                                .withSelectable(false)
                 )
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
-                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem drawerItem) {
+                    public boolean onItemClick(View view, int i, IDrawerItem drawerItem) {
                         if (drawerItem.getIdentifier() == DRAWER_ITEM_OPEN_SOURCE) {
-                            new Libs.Builder()
+                            new LibsBuilder()
                                     .withFields(R.string.class.getFields())
                                     .withVersionShown(true)
                                     .withLicenseShown(true)
@@ -100,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
                                     .withActivityStyle(Libs.ActivityStyle.LIGHT_DARK_TOOLBAR)
                                     .start(MainActivity.this);
                         }
+                        return false;
                     }
                 })
                 .withSelectedItem(-1)
@@ -110,10 +107,9 @@ public class MainActivity extends AppCompatActivity {
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         // Fab Button
-        mFabButton = (ImageButton) findViewById(R.id.fab_button);
-        mFabButton.setImageDrawable(new IconicsDrawable(this, FontAwesome.Icon.faw_upload).color(Color.WHITE).actionBarSize());
+        mFabButton = (FloatingActionButton) findViewById(R.id.fab_normal);
+        mFabButton.setImageDrawable(new IconicsDrawable(this, GoogleMaterial.Icon.gmd_file_upload).color(Color.WHITE).actionBar());
         mFabButton.setOnClickListener(fabClickListener);
-        Utils.configureFab(mFabButton);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.list);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -156,12 +152,18 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * onDestroy make sure we stop the upload
+     */
     @Override
     protected void onDestroy() {
         UploadHelper.getInstance(null, null).destroy();
         super.onDestroy();
     }
 
+    /**
+     * sample onClickListener with an AsyncTask as action
+     */
     View.OnClickListener fabClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -169,7 +171,12 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
+    /**
+     * helper class to start the new detailActivity animated
+     *
+     * @param appInfo
+     * @param appIcon
+     */
     public void animateActivity(AppInfo appInfo, View appIcon) {
         Intent i = new Intent(this, DetailActivity.class);
         i.putExtra("appInfo", appInfo.getComponentName());
@@ -179,6 +186,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * A simple AsyncTask to load the list of applications and display them
+     */
     private class InitializeApplicationsTask extends AsyncTask<Void, Void, Void> {
 
         @Override

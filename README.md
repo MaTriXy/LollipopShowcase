@@ -6,9 +6,11 @@ This includes features like:
 - Toolbar
 - RecyclerView
 - CardView
+- Snackbar
+- Floating Action Button (FAB)
+- CoordinatorLayout
 - ActionBarDrawerToggle
 - Animations (Including animations for the RecyclerView)
-- Floating Action Button (FAB)
 - RippleDrawables
 - Android Compat Theme
 - DrawerLayout
@@ -35,12 +37,13 @@ Some stuff is just implemented to showcase its functionality and so they are not
 
 #Developed By
 
-* Mike Penz - http://mikepenz.com - <penz@tundem.com>
-
+* Mike Penz 
+ * [mikepenz.com](http://mikepenz.com) - <mikepenz@gmail.com>
+ * [paypal.me/mikepenz](http://paypal.me/mikepenz)
 
 #License
 
-    Copyright 2015 Mike Penz
+    Copyright 2016 Mike Penz
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
